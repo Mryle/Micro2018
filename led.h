@@ -21,25 +21,27 @@
 #define ledRedOff()		\
 				LED_RED_GPIO->BSRRL = 1 << LED_RED_PIN
 #define ledRedGet()		\
-				LED_RED_GPIO->ODR & (1 << LED_RED_PIN)
+				(!(LED_RED_GPIO->ODR & (1 << LED_RED_PIN)))
 #define ledGreenOn()	\
 				LED_GREEN_GPIO->BSRRH = 1 << LED_GREEN_PIN
 #define ledGreenOff()	\
 				LED_GREEN_GPIO->BSRRL = 1 << LED_GREEN_PIN
 #define ledGreenGet()		\
-				LED_GREEN_GPIO->ODR & (1 << LED_GREEN_PIN)
+				(!(LED_GREEN_GPIO->ODR & (1 << LED_GREEN_PIN)))
 #define ledBlueOn()		\
 				LED_BLUE_GPIO->BSRRH = 1 << LED_BLUE_PIN
 #define ledBlueOff()	\
 				LED_BLUE_GPIO->BSRRL = 1 << LED_BLUE_PIN
 #define ledBlueGet()		\
-				LED_BLUE_GPIO->ODR & (1 << LED_BLUE_PIN)
+				(!(LED_BLUE_GPIO->ODR & (1 << LED_BLUE_PIN)))
 #define ledGreen2On()	\
 				LED_GREEN2_GPIO->BSRRL = 1 << LED_GREEN2_PIN
 #define ledGreen2Off()	\
 				LED_GREEN2_GPIO->BSRRH = 1 << LED_GREEN2_PIN
+//TODO: Check if correct
 #define ledGreen2Get()		\
-				!(LED_GREEN2_GPIO->ODR & (1 << LED_GREEN2_PIN))
+				(!(LED_GREEN2_GPIO->ODR & (1 << LED_GREEN2_PIN)))
+
 
 void ledPrepare();
 #endif
