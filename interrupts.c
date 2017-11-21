@@ -1,6 +1,24 @@
 #include "interrupts.h"
+#include <irq.h>
 
 INT_HANDLER handlers[INT_MAX_SIZE][INT_MAX_HANDLERS];
+
+void intHandleBit(uint32_t handleBit, void *data);
+void intHandleNegativeBit(uint32_t handleBit, void *data);
+
+IRQn_Type INT_INTERRUPTS[] = {
+	DMA1_Stream6_IRQn,
+	DMA1_Stream5_IRQn,
+	EXTI0_IRQn,
+	EXTI3_IRQn,
+	EXTI4_IRQn,
+	EXTI9_5_IRQn,
+	EXTI15_10_IRQn,
+	TIM2_IRQn,
+	TIM3_IRQn,
+	TIM4_IRQn,
+	TIM5_IRQn,
+};
 
 void intPrepare() {
 	for(int a = 0; a < INT_MAX_SIZE; a++) {
@@ -20,10 +38,42 @@ bool intAddHandler(INT_STREAM stream, INT_HANDLER handler) {
 	return false;
 }
 
+void intEnable(INT_STREAM stream) {
+	NVIC_EnableIRQ(INT_INTERRUPTS[stream]);
+}
+
+void intDisable(INT_STREAM stream) {
+	NVIC_DisableIRQ(INT_INTERRUPTS[stream]);
+}
+
+void intSetPriority(INT_STREAM stream, uint32_t prio, uint32_t subprio) {
+	IRQsetPriority(INT_INTERRUPTS[stream], prio, subprio);
+}
+
+void intAutoEnable() {
+	for(int a = 0; a < INT_MAX_SIZE; a++) {
+		for(int b = 0; b < INT_MAX_HANDLERS; b++) {
+			handlers[a][b].function = 0;
+			if (handlers[a][b].function != 0) {
+				NVIC_EnableIRQ(INT_INTERRUPTS[b]);
+				break;
+			}
+		}
+	}
+}
+
 void intHandle(INT_STREAM stream, volatile uint32_t *check, volatile uint32_t *handle) {
 	for(int a = 0; a < INT_MAX_HANDLERS; a++) {
-		if (handlers[stream][a].function != 0 &&
-				(*check) & handlers[stream][a].checkBit) {
+		if (handlers[stream][a].function != 0 && (*check) & handlers[stream][a].checkBit) {
+			(*handle) = handlers[stream][a].handleBit;
+			handlers[stream][a].function(handlers[stream][a].data);
+		}
+	}
+}
+
+void intTimHandle(INT_STREAM stream, volatile uint32_t check, volatile uint32_t *handle) {
+	for(int a = 0; a < INT_MAX_HANDLERS; a++) {
+		if (handlers[stream][a].function != 0 && check & handlers[stream][a].checkBit) {
 			(*handle) = handlers[stream][a].handleBit;
 			handlers[stream][a].function(handlers[stream][a].data);
 		}
@@ -32,6 +82,10 @@ void intHandle(INT_STREAM stream, volatile uint32_t *check, volatile uint32_t *h
 
 void DMA1_Stream6_IRQHandler() {
 	intHandle(INT_DMA1S6, &(DMA1->HISR), &(DMA1->HIFCR));
+}
+
+void DMA1_Stream5_IRQHandler() {
+	intHandle(INT_DMA1S5, &(DMA1->HISR), &(DMA1->HIFCR));
 }
 
 void EXTI0_IRQHandler() 
@@ -57,5 +111,21 @@ void EXTI9_5_IRQHandler()
 void EXTI15_10_IRQHandler() 
 {
 	intHandle(INT_EXTI15_10, &(EXTI->PR), &(EXTI->PR));
+}
+
+void TIM2_IRQHandler() {
+	intTimHandle(INT_TIM2, TIM2->SR & TIM2->DIER, &(TIM2->SR));
+}
+
+void TIM3_IRQHandler() {
+	intTimHandle(INT_TIM3, TIM3->SR & TIM3->DIER, &(TIM3->SR));
+}
+
+void TIM4_IRQHandler() {
+	intTimHandle(INT_TIM4, TIM4->SR & TIM4->DIER, &(TIM4->SR));
+}
+
+void TIM5_IRQHandler() {
+	intTimHandle(INT_TIM5, TIM5->SR & TIM5->DIER, &(TIM5->SR));
 }
 
