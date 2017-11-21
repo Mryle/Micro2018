@@ -5,6 +5,7 @@ void addLedHandlers();
 bool status[2];
 
 int main() {
+	// Inicjalizacja
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN | RCC_AHB1ENR_DMA1EN;
 	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
@@ -31,24 +32,18 @@ int main() {
 }
 
 void switchRedLed(void *data) {
-	bool *stat = (bool*)data;
-	if (*stat) {
+	if (ledRedGet()) {
 		ledRedOff();
-		*stat = false;
 	} else {
 		ledRedOn();
-		*stat = true;
 	}
 }
 
 void switchGreenLed(void *data) {
-	bool *stat = (bool*)data;
-	if (*stat) {
+	if (ledGreenGet()) {
 		ledGreenOff();
-		*stat = false;
 	} else {
 		ledGreenOn();
-		*stat = true;
 	}
 }
 

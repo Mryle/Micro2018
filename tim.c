@@ -35,6 +35,11 @@ void timEnable(TIM_NUM num) {
 	timReg[num]->CR1 |= TIM_CR1_CEN;
 }
 
+void timDisable(TIM_NUM num) {
+	//	timReg[num]->CR1 |= TIM_CR1_CEN;
+	timReg[num]->CR1 = (~TIM_CR1_CEN) & timReg[num]->CR1;
+}
+
 void timInterruptEnable(TIM_NUM num, bool nvic) {
 	timReg[num]->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
 	timReg[num]->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;

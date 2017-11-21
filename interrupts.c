@@ -1,5 +1,6 @@
 #include "interrupts.h"
 #include <irq.h>
+#include "led.h"
 
 INT_HANDLER handlers[INT_MAX_SIZE][INT_MAX_HANDLERS];
 

@@ -21,10 +21,12 @@ typedef enum {
 void timPrepareUp(TIM_NUM num, uint32_t psc, uint32_t arr);
 void timPrepareDown(TIM_NUM num, uint32_t psc, uint32_t arr);
 void timPrepareBoth(TIM_NUM num, uint32_t psc, uint32_t arr);
+
 /**
  * Włączenie licznika
  */
 void timEnable(TIM_NUM num);
+void timDisable(TIM_NUM num);
 /**
  * Włączenie przerwań
  * nvic = czy włączyć także na poziomie nvic
@@ -37,5 +39,5 @@ INT_STREAM timInterrupt(TIM_NUM num);
 
 
 //TODO:
-//Zmiana częstotliwości działania licznika (domyślnie jest taktowany z zegarem 16MHz
+//Zmiana częstotliwości działania licznika (domyślnie jest taktowany z zegarem 16MHz)
 #endif

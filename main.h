@@ -4,7 +4,8 @@
 #include <string.h>
 #include <irq.h>
 
-#include "buttons.h"
+//#include "buttons.h"
 #include "interrupts.h"
-#include "rwr.h"
+//#include "rwr.h"
 #include "led.h"
+#include "tim.h"
