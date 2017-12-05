@@ -106,7 +106,6 @@ void EXTI4_IRQHandler()
 
 void EXTI9_5_IRQHandler() 
 {
-	ledGreenOn();
 	intHandle(INT_EXTI9_5, &(EXTI->PR), &(EXTI->PR));
 }
 

@@ -5,26 +5,28 @@
 
 int keyColPin[] = {0, 1, 2, 3};
 int keyRowPin[] = {6, 7, 8, 9};
-TIM_NUM timer;
+
+uint32_t lastRow = 0;
 
 void keyRowHandler(void *data);
+void keyTimerHandler(void *data);
 
-void keyInitInternalInOut() {
+void keyInitInOutConfigure() {
 	// Ustawianie wyprowadzeń kolumn
 	for(int a = 0; a < 4; a++) {
 		GPIOoutConfigure(KEY_GPIO, keyColPin[a], GPIO_OType_PP, GPIO_Low_Speed, GPIO_PuPd_NOPULL);
 	}
 	// Ustawianie wyprowadzeń wierszy
 	for(int a = 0; a < 4; a++) {
-		GPIOinConfigure(KEY_GPIO, keyRowPin[a], GPIO_PuPd_UP, EXTI_Mode_Interrupt, EXTI_Trigger_Rising_Falling);
+		GPIOinConfigure(KEY_GPIO, keyRowPin[a], GPIO_PuPd_UP, EXTI_Mode_Interrupt, EXTI_Trigger_Falling);
 	}
 }
 
-void keyAddHandler(INT_STREAM stream, int row, uint32_t bit) {
+void keyAddHandler(INT_STREAM stream, uint32_t row, uint32_t bit) {
 	INT_HANDLER handler;
 	handler.checkBit = bit;
 	handler.handleBit = bit;
-	handler.data = 0;
+	handler.data = (void*) row;
 	handler.function = keyRowHandler;
 	intAddHandler(stream, handler);
 }
@@ -34,6 +36,12 @@ void keyInitInternalHandlers() {
 	keyAddHandler(INT_EXTI9_5, 1, EXTI_PR_PR7); 
 	keyAddHandler(INT_EXTI9_5, 2, EXTI_PR_PR8); 
 	keyAddHandler(INT_EXTI9_5, 3, EXTI_PR_PR9); 
+	INT_HANDLER handler;
+	handler.checkBit = TIM_SR_CC1IF;
+	handler.handleBit = ~TIM_SR_CC1IF;
+	handler.data = 0;
+	handler.function = keyTimerHandler;
+	intAddHandler(timInterrupt(TIM_2), handler);
 }
 
 void keyResetInterrupts() {
@@ -45,8 +53,8 @@ void keyResetInterrupts() {
 }
 
 void keyStartTimer() {
-	timForceReset(timer);
-	timEnable(timer);
+	timForceReset(TIM_2);
+	timEnable(TIM_2);
 }
 
 void keyEnableHandlers() {
@@ -57,16 +65,29 @@ void keyDisableHandlers() {
 	intDisable(INT_EXTI9_5);
 }
 
-void keyPrepare(TIM_NUM tim) {
-	// Ustawienie i konfiguracja licznika.
-	// timer = tim;
-	// timPrepareUp(tim, 16000, 10); //Licznik co 10 ms
-	// Stan niski na wyprowadzeniach kolumn
-	for(int a = 0; a < 4; a++) {
+void keyColLowState() {
+	for(int a = 0; a < 4; a++) {	//Stan niski na liniach kolumn
 		KEY_GPIO->BSRRH = 1 << keyColPin[a];
 	}
+}
+
+void keyColHighState() {
+	for(int a = 0; a < 4; a++) {	//Stan wysoki na liniach kolumn
+		KEY_GPIO->BSRRL = 1 << keyColPin[a];
+	}
+}
+
+void keyPrepare() {
+	// Ustawienie i konfiguracja licznika.
+	timPrepareUp(TIM_2, 16000, 500);		//Licznik co 10 ms
+	timInterruptEnable(TIM_2, true);	//Włączenie przerwań licznika
+	TIM2->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
+	TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;
+	TIM2->CCR1 = 499;
+	// Stan niski na wyprowadzeniach kolumn
+	keyColLowState();
 	// Ustawianie wyprowadzeń wejścia i wyjścia
-	keyInitInternalInOut();
+	keyInitInOutConfigure();
 	// Dodanie obsługi przerwań
 	keyInitInternalHandlers();
 	// Zresetowanie przerwań
@@ -76,9 +97,20 @@ void keyPrepare(TIM_NUM tim) {
 }
 
 void keyRowHandler(void *data) {
+	lastRow = (uint32_t) data;
+	keyDisableHandlers();		// Wyłącz przerwania EXTI dla wierszy
+	keyResetInterrupts();		// Wyzeruj znaczniki przerwań dla wierszy
+	keyColHighState();
+	keyStartTimer();	// Wyzerowanie rejestru licznika i uruchomienie go
+}
+
+void keyTimerHandler(void *data) {
 	if (ledRedGet()) {
 		ledRedOff();
 	} else {
 		ledRedOn();
 	}
+	keyColLowState();
+	timDisable(TIM_2);	//Wyłącza licznik
+	keyEnableHandlers();
 }

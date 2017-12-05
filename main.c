@@ -14,8 +14,7 @@ int main() {
 	// Przygotowanie poszczególnych modułów.
 	intPrepare();
 	ledPrepare();
-	keyPrepare(TIM_2);
-
+	keyPrepare();
 	ledBlueOn();
 	for (;;) {
 		;

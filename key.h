@@ -18,6 +18,6 @@ typedef struct {
  * Inicjalizacja klawiatury
  * tim - licznik z którego ma korzystać klawiatura.
  */
-void keyPrepare(TIM_NUM tim);
+void keyPrepare();
 
 #endif
