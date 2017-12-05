@@ -10,10 +10,14 @@ INT_STREAM timInt[TIM_MAX_SIZE] = {
 	INT_TIM3,
 };
 
+void timForceReset(TIM_NUM num) {
+	timReg[num]->EGR = TIM_EGR_UG;
+}
+
 void timPrepareInternal(TIM_NUM num, uint32_t psc, uint32_t arr) {
 	timReg[num]->PSC = psc;
 	timReg[num]->ARR = arr;
-	timReg[num]->EGR = TIM_EGR_UG; // Wymuszenie zdarzenia uaktualnienia
+	timForceReset(num);
 }
 
 void timPrepareUp(TIM_NUM num, uint32_t psc, uint32_t arr) {

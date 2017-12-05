@@ -17,6 +17,9 @@ typedef enum {
 
 /**
  * Inicjalizacja parametrów z zerowaniem licznika
+ * psc - prescaler
+ * asc - licznik
+ * częstotliwość - 16 Mhz = 16*10^6Hz
  */
 void timPrepareUp(TIM_NUM num, uint32_t psc, uint32_t arr);
 void timPrepareDown(TIM_NUM num, uint32_t psc, uint32_t arr);
@@ -37,6 +40,10 @@ void timInterruptEnable(TIM_NUM num, bool nvic);
  */
 INT_STREAM timInterrupt(TIM_NUM num);
 
+/**
+ * Wymuszenie zdarzenia uaktualnienia (żeby np. wyczyścić rejestry)
+ */
+void timForceReset(TIM_NUM num);
 
 //TODO:
 //Zmiana częstotliwości działania licznika (domyślnie jest taktowany z zegarem 16MHz)
