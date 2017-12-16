@@ -10,3 +10,5 @@
 #include "led.h"
 #include "tim.h"
 #include "key.h"
+
+#include <lcd.h>

@@ -8,16 +8,33 @@ int main() {
 	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 	RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
-	//RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 	
 	__NOP();
 	// Przygotowanie poszczególnych modułów.
 	intPrepare();
 	ledPrepare();
 	keyPrepare();
+
+	LCDconfigure();
+	LCDclear();
+
+	// Kontrolna lampka
 	ledBlueOn();
 	for (;;) {
 		;
 	}
+}
+
+void keyPressed(uint32_t row, uint32_t col) {
+	/*
+	if (ledRedGet()) {
+		ledRedOff();
+	} else {
+		ledRedOn();
+	}
+	*/
+}
+
+void keyHolding(uint32_t row, uint32_t col) {
 }
 

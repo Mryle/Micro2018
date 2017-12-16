@@ -11,9 +11,10 @@ CFLAGS   = $(FLAGS) -Wall -g \
 LDFLAGS  = $(FLAGS) -Wl,--gc-sections -nostartfiles \
 					 -L/opt/arm/stm32/lds -Tstm32f411re.lds
 
-OBJECTS = startup_stm32.o delay.o gpio.o \
+OBJECTS = startup_stm32.o delay.o gpio.o lcd.o fonts.o \
 					main.o rwr.o led.o queue.o interrupts.o buttons.o tim.o \
 					key.o
+
 TARGET  = zad
 .SECONDARY: $(TARGET).elf $(OBJECTS)
 all: $(TARGET).bin
