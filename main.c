@@ -23,6 +23,8 @@ int main() {
 
 	queueInit(&next, next_tab, 25);
 	queuePutStr(&next, "Hello:");
+	
+	write = true;
 
 	LCDconfigure();
 	LCDclear();
@@ -45,6 +47,7 @@ int main() {
 }
 
 void keyPressed(uint32_t row, uint32_t col) {
+	/*
 	if (!write) {
 		queuePut(&next, 'r');
 		queuePut(&next, '0'+row);
@@ -52,12 +55,13 @@ void keyPressed(uint32_t row, uint32_t col) {
 		queuePut(&next, '0'+col);
 		write = true;
 	} else {
+	*/
 		if (ledRedGet()) {
 			ledRedOff();
 		} else {
 			ledRedOn();
 		}
-	}
+	//}
 }
 
 void keyHolding(uint32_t row, uint32_t col) {
