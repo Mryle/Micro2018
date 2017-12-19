@@ -4,8 +4,8 @@ void addLedHandlers();
 
 char next_tab[25];
 Queue next;
-bool clear = false;
-bool write = false;
+volatile bool clear = false;
+volatile bool write = false;
 
 
 int main() {
@@ -38,30 +38,33 @@ int main() {
 		if (write) {
 			char znk = queuePeek(&next);
 			queuePop(&next);
-			LCDputchar(znk);
+			LCDputcharWrap(znk);
 			if (queueEmpty(&next)) {
 				write = false;
 			}
 		}
+		Delay(36000);
+		if (ledBlueGet())
+			ledBlueOff();
+		else
+			ledBlueOn();
 	}
 }
 
 void keyPressed(uint32_t row, uint32_t col) {
-	/*
 	if (!write) {
 		queuePut(&next, 'r');
 		queuePut(&next, '0'+row);
 		queuePut(&next, 'c');
 		queuePut(&next, '0'+col);
 		write = true;
+	}
+	//LCDputcharWrap('0' + row);
+	if (ledRedGet()) {
+		ledRedOff();
 	} else {
-	*/
-		if (ledRedGet()) {
-			ledRedOff();
-		} else {
-			ledRedOn();
-		}
-	//}
+		ledRedOn();
+	}
 }
 
 void keyHolding(uint32_t row, uint32_t col) {

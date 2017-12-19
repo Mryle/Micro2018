@@ -112,7 +112,7 @@ bool keyScanKeyboard() {
 	bool state = false;
 	for(int col = 0; col < 4; col++) {
 		KEY_GPIO->BSRRH = 1 << keyColPin[col]; // Ustaw stan niski na wyprowadzeniach kolumn
-		state = (KEY_GPIO->ODR & (1 << keyColPin[col]));
+		state = !(KEY_GPIO->ODR & (1 << keyColPin[col]));
 		KEY_GPIO->BSRRH = 1 << keyColPin[col]; // Ustaw stan wysoki na wyprowadzeniach kolumn
 		if (state) {
 			if (holding > 0) {
@@ -130,12 +130,17 @@ bool keyScanKeyboard() {
 
 void keyTimerHandler(void *data) {
 	// Skanuj stan klawiatury
-	if (!keyScanKeyboard()) {
+	if (ledGreenGet()) {
+			ledGreenOff();
+		} else {
+			ledGreenOn();
+		}
+	keyPressed(lastRow, 0);
+	if (true) {		// !keyScanKeyboard()
 		holding = 0;
 		timDisable(TIM_2);	// Wyłącza licznik
 		keyColLowState();		// Ustawienie niskiego stanu
 		keyResetInterrupts();				
 		keyEnableHandlers();	// Ponownie włącz zdarzenia w układzie EXTI
 	}
-
 }
