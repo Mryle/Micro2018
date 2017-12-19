@@ -1,16 +1,16 @@
 #include "key.h"
 #include "led.h"
 
+#include <delay.h>
+
 #define KEY_GPIO	GPIOC
 
 int keyColPin[] = {0, 1, 2, 3};
 int keyRowPin[] = {6, 7, 8, 9};
 
 uint32_t lastRow = 0;
-uint32_t holding = 0;
 
 extern void keyPressed(uint32_t row, uint32_t col);
-extern void keyHolding(uint32_t row, uint32_t col, uint32_t holding);
 
 void keyRowHandler(void *data);
 void keyTimerHandler(void *data);
@@ -83,11 +83,11 @@ void keyColHighState() {
 
 void keyPrepare() {
 	// Ustawienie i konfiguracja licznika.
-	timPrepareUp(TIM_2, 16000, 500);		//Licznik co 10 ms
+	timPrepareUp(TIM_2, 16000, 100);		//Licznik co 1 ms
 	timInterruptEnable(TIM_2, true);	//Włączenie przerwań licznika
 	TIM2->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
 	TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;
-	TIM2->CCR1 = 499;
+	TIM2->CCR1 = 9;
 	// Stan niski na wyprowadzeniach kolumn
 	keyColLowState();
 	// Ustawianie wyprowadzeń wejścia i wyjścia
@@ -106,41 +106,39 @@ void keyRowHandler(void *data) {
 	keyResetInterrupts();		// Wyzeruj znaczniki przerwań dla wierszy
 	keyColHighState();
 	keyStartTimer();	// Wyzerowanie rejestru licznika i uruchomienie go
+	ledRedOn();
 }
 
 bool keyScanKeyboard() {
 	bool state = false;
-	for(int col = 0; col < 4; col++) {
-		KEY_GPIO->BSRRH = 1 << keyColPin[col]; // Ustaw stan niski na wyprowadzeniach kolumn
-		state = !(KEY_GPIO->ODR & (1 << keyColPin[col]));
-		KEY_GPIO->BSRRH = 1 << keyColPin[col]; // Ustaw stan wysoki na wyprowadzeniach kolumn
+	for(int col = 0; col < 4 && !state; col++) {
+		KEY_GPIO->BSRRH = 1 << keyColPin[col];	//Ustaw stan niski na odpowiedniej kolumnie
+		__NOP();
+		__NOP();
+		__NOP();
+		state = !(KEY_GPIO->IDR & (1 << keyRowPin[lastRow]));
 		if (state) {
-			if (holding > 0) {
-				keyHolding(lastRow, col, holding);
-				holding ++;
-			} else {
-				keyPressed(lastRow, col);
-				holding = 1;
-			}
-			return true;
+			keyPressed(lastRow, col);
 		}
+		KEY_GPIO->BSRRL = 1 << keyColPin[col];	// Ponownie ustawiamy stan wysoki na kolumnie
 	}
-	return false;
+	return state;
 }
 
+// Trwa na tyle długo, że usuwa całość
 void keyTimerHandler(void *data) {
+	//timDisable(TIM_2);	// Wyłącza licznik
 	// Skanuj stan klawiatury
-	if (ledGreenGet()) {
-			ledGreenOff();
-		} else {
-			ledGreenOn();
-		}
-	keyPressed(lastRow, 0);
+	//keyPressed(lastRow, 0);	//Wywołaj zdarzenie klikniecia przycisku
+	//keyScanKeyboard();
+	/*
 	if (true) {		// !keyScanKeyboard()
-		holding = 0;
-		timDisable(TIM_2);	// Wyłącza licznik
 		keyColLowState();		// Ustawienie niskiego stanu
+		//timDisable(TIM_2);
 		keyResetInterrupts();				
 		keyEnableHandlers();	// Ponownie włącz zdarzenia w układzie EXTI
 	}
+	ledRedOn();
+	*/
+	ledRedOff();
 }

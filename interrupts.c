@@ -116,6 +116,11 @@ void EXTI15_10_IRQHandler()
 
 void TIM2_IRQHandler() {
 	intTimHandle(INT_TIM2, TIM2->SR & TIM2->DIER, &(TIM2->SR));
+	/*if (ledGreen2Get())
+		ledGreen2Off();
+	else
+		ledGreen2On();
+	*/
 }
 
 void TIM3_IRQHandler() {
