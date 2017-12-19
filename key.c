@@ -100,13 +100,35 @@ void keyPrepare() {
 	keyEnableHandlers();
 }
 
-void keyRowHandler(void *data) {
-	lastRow = (uint32_t) data;
+void keyRowHandler(uint32_t row) {
+	lastRow = row;
 	keyDisableHandlers();		// Wyłącz przerwania EXTI dla wierszy
 	keyResetInterrupts();		// Wyzeruj znaczniki przerwań dla wierszy
 	keyColHighState();
 	keyStartTimer();	// Wyzerowanie rejestru licznika i uruchomienie go
 	ledRedOn();
+}
+
+void EXTI9_5_IRQHandler() // Handler
+{
+	intHandle(INT_EXTI9_5, &(EXTI->PR), &(EXTI->PR));
+	uint32_t val = EXTI->PR;
+	if (val & EXTI_PR_PR6) {
+		EXTI->SR = EXTI_PR_PR6;
+		keyRowHandler(0);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->SR = EXTI_PR_PR7;
+		keyRowHandler(1);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->SR = EXTI_PR_PR7;
+		keyRowHandler(2);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->SR = EXTI_PR_PR7;
+		keyRowHandler(3);
+	}
 }
 
 bool keyScanKeyboard() {
@@ -126,7 +148,7 @@ bool keyScanKeyboard() {
 }
 
 // Trwa na tyle długo, że usuwa całość
-void keyTimerHandler(void *data) {
+void keyTimerHandler() {
 	//timDisable(TIM_2);	// Wyłącza licznik
 	// Skanuj stan klawiatury
 	//keyPressed(lastRow, 0);	//Wywołaj zdarzenie klikniecia przycisku
@@ -141,4 +163,15 @@ void keyTimerHandler(void *data) {
 	ledRedOn();
 	*/
 	ledRedOff();
+}
+
+void TIM2_IRQHandler() {	// Handler
+	uint32_t val = TIM2->SR & TIM2->DIER;
+	if (val & TIM_SR_CC1IF) {
+		TIM2->SR = ~TIM_SR_CC1IF;
+		keyTimerHandler();
+	}
+	if (val & TIM_SR_UIF) {
+		TIM2->SR = ~TIM_SR_UIF;
+	}
 }

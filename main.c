@@ -48,11 +48,6 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 void onSecondTim() {
 	timDisable(TIM_3);	// Wyłączamy ten licznik
 
-	/*if (ledRedGet())
-		ledRedOff();
-	else
-		ledRedOn();
-	*/
 	click = click % 4;
 	if (row != 5) {
 		char znk = 'A';//tabmask[click][row][col];
@@ -70,6 +65,17 @@ void onSecondTim() {
 	col = 5;
 	//LCDputcharWrap('0' + row);
 
+}
+
+void TIM3_IRQHandler() {
+	uint32_t val = TIM3->SR & TIM3->DIER;
+	if (val & TIM_SR_CC1IF) {
+		TIM3->SR = ~TIM_SR_CC1IF;
+		onSecondTim();
+	}
+	if (val & TIM_SR_UIF) {
+		TIM3->SR = ~TIM_SR_UIF;
+	}
 }
 
 void prepareSecondTim() {

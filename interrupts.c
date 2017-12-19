@@ -104,27 +104,10 @@ void EXTI4_IRQHandler()
 	intHandle(INT_EXTI4, &(EXTI->PR), &(EXTI->PR));
 }
 
-void EXTI9_5_IRQHandler() 
-{
-	intHandle(INT_EXTI9_5, &(EXTI->PR), &(EXTI->PR));
-}
 
 void EXTI15_10_IRQHandler() 
 {
 	intHandle(INT_EXTI15_10, &(EXTI->PR), &(EXTI->PR));
-}
-
-void TIM2_IRQHandler() {
-	intTimHandle(INT_TIM2, TIM2->SR & TIM2->DIER, &(TIM2->SR));
-	/*if (ledGreen2Get())
-		ledGreen2Off();
-	else
-		ledGreen2On();
-	*/
-}
-
-void TIM3_IRQHandler() {
-	intTimHandle(INT_TIM3, TIM3->SR & TIM3->DIER, &(TIM3->SR));
 }
 
 void TIM4_IRQHandler() {
