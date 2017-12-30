@@ -26,3 +26,24 @@ void ledPrepare() {
 			GPIO_Low_Speed,
 			GPIO_PuPd_NOPULL);
 }
+
+void ledRedSwitch() {
+	if (ledRedGet())
+		ledRedOff();
+	else
+		ledRedOn();
+}
+
+void ledGreenSwitch() {
+	if (ledGreenGet())
+		ledGreenOff();
+	else
+		ledGreenOn();
+}
+
+void ledBlueSwitch() {
+	if (ledBlueGet())
+		ledBlueOff();
+	else
+		ledBlueOn();
+}

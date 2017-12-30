@@ -44,4 +44,7 @@
 
 
 void ledPrepare();
+void ledRedSwitch();
+void ledGreenSwitch();
+void ledBlueSwitch();
 #endif
