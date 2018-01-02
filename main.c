@@ -1,7 +1,5 @@
 #include "main.h"
 
-void addLedHandlers();
-
 char tabmask[4][4][4] = {
 {	{'1',	'A',	'D',	'#'},
 	{'G',	'#',	'#',	'#'},
@@ -28,6 +26,7 @@ volatile bool clear = false;
 volatile bool write = false;
 volatile uint32_t row = 5, col = 5, click = 0;
 
+/*
 void keyPressed(uint32_t _row, uint32_t _col) {
 	if (row == _row && col == _col) {
 		click++;
@@ -44,10 +43,10 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 	timForceReset(TIM_3);
 	//timEnable(TIM_3);
 }
+*/
 
 void onSecondTim() {
-	timDisable(TIM_3);	// Wyłączamy ten licznik
-
+	/*timDisable(TIM3);	// Wyłączamy ten licznik
 	click = click % 4;
 	if (row != 5) {
 		char znk = 'A';//tabmask[click][row][col];
@@ -64,33 +63,17 @@ void onSecondTim() {
 	row = 5;
 	col = 5;
 	//LCDputcharWrap('0' + row);
-
-}
-
-void TIM3_IRQHandler() {
-	uint32_t val = TIM3->SR & TIM3->DIER;
-	if (val & TIM_SR_CC1IF) {
-		TIM3->SR = ~TIM_SR_CC1IF;
-		onSecondTim();
-	}
-	if (val & TIM_SR_UIF) {
-		TIM3->SR = ~TIM_SR_UIF;
-	}
+	*/
 }
 
 void prepareSecondTim() {
-	timPrepareUp(TIM_3, 16000, 1000);		//Licznik co 1 ms
-	timInterruptEnable(TIM_3, true);	//Włączenie przerwań licznika
-	TIM2->SR = ~(TIM_SR_UIF | TIM_SR_CC1IF);
-	TIM2->DIER = TIM_DIER_UIE | TIM_DIER_CC1IE;
+	timPrepareUp(TIM2, 16000, 1000);		//Licznik co 1 ms
+	timInterruptDefaultEnable(TIM2);	//Włączenie przerwań licznika
 	TIM2->CCR1 = 999;
-
-	INT_HANDLER handler;
-	handler.checkBit = TIM_SR_CC1IF;
-	handler.handleBit = ~TIM_SR_CC1IF;
-	handler.data = 0;
-	handler.function = onSecondTim;
-	intAddHandler(timInterrupt(TIM_3), handler);
+	timPrepareUp(TIM3, 16000, 1000);		//Licznik co 1 ms
+	timInterruptDefaultEnable(TIM3);	//Włączenie przerwań licznika
+	TIM3->CCR1 = 999;
+	//NVIC ... Enable
 }
 
 int main() {
@@ -103,9 +86,8 @@ int main() {
 	
 	__NOP();
 	// Przygotowanie poszczególnych modułów.
-	intPrepare();
-	ledPrepare();
-	keyPrepare();
+	ledPrepare();	//	Konfiguracja Out dla ledów i wyłączenie ich
+	//keyPrepare(); //Just Testing led interrupts
 	
 	prepareSecondTim();
 
@@ -115,14 +97,19 @@ int main() {
 	queueInit(&next, next_tab, 25);
 	queuePutStr(&next, "Hello:");
 	
-	write = true;
+	//write = true;
 
 	LCDconfigure();
 	LCDclear();
+
+	NVIC_EnableIRQ(TIM2_IRQn);
+	NVIC_EnableIRQ(TIM3_IRQn);
+
+
 	// Kontrolna lampka
 	ledBlueOn();
 	for (;;) {
-		if (clear) {
+		/*if (clear) {
 			LCDclear();
 			clear = false;
 		}
@@ -139,6 +126,52 @@ int main() {
 			ledBlueOff();
 		else
 			ledBlueOn();
+		*/
+		;
 	}
 }
 
+void EXTI9_5_IRQHandler() // Handler
+{
+	//intHandle(INT_EXTI9_5, &(EXTI->PR), &(EXTI->PR));
+	uint32_t val = EXTI->PR;
+	if (val & EXTI_PR_PR6) {
+		EXTI->PR = EXTI_PR_PR6;
+		keyRowHandler(0);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->PR = EXTI_PR_PR7;
+		keyRowHandler(1);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->PR = EXTI_PR_PR7;
+		keyRowHandler(2);
+	}
+	if (val & EXTI_PR_PR7) {
+		EXTI->PR = EXTI_PR_PR7;
+		keyRowHandler(3);
+	}
+}
+
+// Correct Timer handlers
+void TIM2_IRQHandler() {	// Handler
+	uint32_t val = TIM2->SR & TIM2->DIER;
+	if (val & TIM_SR_CC1IF) {
+		TIM2->SR = ~TIM_SR_CC1IF;
+		ledRedSwitch();
+	}
+	if (val & TIM_SR_UIF) {
+		TIM2->SR = ~TIM_SR_UIF;
+	}
+}
+
+void TIM3_IRQHandler() {
+	uint32_t val = TIM3->SR & TIM3->DIER;
+	if (val & TIM_SR_CC1IF) {
+		TIM3->SR = ~TIM_SR_CC1IF;
+		ledGreenSwitch();
+	}
+	if (val & TIM_SR_UIF) {
+		TIM3->SR = ~TIM_SR_UIF;
+	}
+}

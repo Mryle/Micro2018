@@ -4,12 +4,9 @@
 #include <string.h>
 #include <irq.h>
 
-//#include "buttons.h"
-#include "interrupts.h"
-//#include "rwr.h"
-#include "led.h"
-#include "tim.h"
-#include "key.h"
-#include "queue.h"
+#include "led.h"	// Obsługa ledów
+#include "tim.h"	// Obsługa timerów (do uproszczenia)
+#include "key.h"	// Obsługa klawiatury
+#include "queue.h"	// Obsługa kolejek
 
 #include <lcd.h>

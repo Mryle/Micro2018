@@ -2,18 +2,11 @@
 #define __TIM_H
 #include <stm32.h>
 #include <stdbool.h>
-#include "interrupts.h"
 /**
  * Wymagane:
  * Włączenie taktowania licznika x:
  * RCC->APB1ENR |= RCC_APB1ENR_TIMxEN;
  */
-
-typedef enum {
-	TIM_2	=	0,
-	TIM_3	=	1,
-	TIM_MAX_SIZE
-} TIM_NUM;
 
 /**
  * Inicjalizacja parametrów z zerowaniem licznika
@@ -21,29 +14,24 @@ typedef enum {
  * asc - licznik
  * częstotliwość - 16 Mhz = 16*10^6Hz
  */
-void timPrepareUp(TIM_NUM num, uint32_t psc, uint32_t arr);
-void timPrepareDown(TIM_NUM num, uint32_t psc, uint32_t arr);
-void timPrepareBoth(TIM_NUM num, uint32_t psc, uint32_t arr);
+void timPrepareUp(TIM_TypeDef* timer, uint32_t psc, uint32_t arr);
+void timPrepareDown(TIM_TypeDef* timer, uint32_t psc, uint32_t arr);
+void timPrepareBoth(TIM_TypeDef* timer, uint32_t psc, uint32_t arr);
 
 /**
  * Włączenie licznika
  */
-void timEnable(TIM_NUM num);
-void timDisable(TIM_NUM num);
+void timEnable(TIM_TypeDef* timer);
+void timDisable(TIM_TypeDef* timer);
 /**
- * Włączenie przerwań
- * nvic = czy włączyć także na poziomie nvic
+ * Włączenie przerwań UIF i CC1IF na poziomie licznika
  */
-void timInterruptEnable(TIM_NUM num, bool nvic);
+void timInterruptDefaultEnable(TIM_TypeDef* timer);
 /**
- * Pobranie nazwy przerwania dla licznika
+ * Ustawia flagę wymuszającą zdarzenie uaktualnienia (żeby np. wyczyścić rejestry)
+ *
  */
-INT_STREAM timInterrupt(TIM_NUM num);
-
-/**
- * Wymuszenie zdarzenia uaktualnienia (żeby np. wyczyścić rejestry)
- */
-void timForceReset(TIM_NUM num);
+void timForceReset(TIM_TypeDef* timer);
 
 //TODO:
 //Zmiana częstotliwości działania licznika (domyślnie jest taktowany z zegarem 16MHz)

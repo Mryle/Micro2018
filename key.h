@@ -1,7 +1,7 @@
 #ifndef __KEY_H
 #define __KEY_F
 
-#include "interrupts.h"
+//#include "interrupts.h"
 #include "tim.h"
 
 /*
@@ -19,5 +19,14 @@ typedef struct {
  * tim - licznik z którego ma korzystać klawiatura.
  */
 void keyPrepare();
+
+/**
+ * Handlery na czytanie klawiszy, do podpięcia pod odpowiednie
+ **/
+void keyRowHandler(uint32_t row);
+/**
+ * Handler na wykorzystywany drugi licznik
+ **/
+void keyTimerHandler();
 
 #endif
