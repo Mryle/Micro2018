@@ -26,24 +26,25 @@ volatile bool clear = false;
 volatile bool write = false;
 volatile uint32_t row = 5, col = 5, click = 0;
 
-/*
 void keyPressed(uint32_t _row, uint32_t _col) {
 	if (row == _row && col == _col) {
 		click++;
 	} else {
 		row = _row;
 		col = _col;
-		click = 0;
+		click = 1;
 	}
 	if (!write) {
 		queuePut(&next, '.');
+		queuePut(&next, tabmask[row][col][0]);
 		write = true;
+	} else {
+		ledRedSwitch();
 	}
-	timDisable(TIM_3);
-	timForceReset(TIM_3);
+	//timDisable(TIM_3);
+	//timForceReset(TIM_3);
 	//timEnable(TIM_3);
 }
-*/
 
 void onSecondTim() {
 	/*timDisable(TIM3);	// Wyłączamy ten licznik
@@ -89,12 +90,12 @@ int main() {
 	//prepareSecondTim();
 
 	IRQsetPriority(TIM2_IRQn, 		HIGH_IRQ_PRIO,	HIGH_IRQ_SUBPRIO);
-	IRQsetPriority(TIM3_IRQn, 		HIGH_IRQ_PRIO,	MIDDLE_IRQ_SUBPRIO);
+	//IRQsetPriority(TIM3_IRQn, 		HIGH_IRQ_PRIO,	MIDDLE_IRQ_SUBPRIO);
 	IRQsetPriority(EXTI9_5_IRQn,	HIGH_IRQ_PRIO,	VERY_HIGH_IRQ_SUBPRIO);
 	queueInit(&next, next_tab, 25);
 	queuePutStr(&next, "Hello:");
 	
-	//write = true;
+	write = true;
 
 	LCDconfigure();
 	LCDclear();
@@ -102,7 +103,7 @@ int main() {
 	// Kontrolna lampka
 	ledBlueOn();
 	for (;;) {
-		/*if (clear) {
+		if (clear) {
 			LCDclear();
 			clear = false;
 		}
@@ -119,7 +120,6 @@ int main() {
 			ledBlueOff();
 		else
 			ledBlueOn();
-		*/
 		;
 	}
 }
@@ -151,7 +151,7 @@ void TIM2_IRQHandler() {	// Handler
 	uint32_t val = TIM2->SR & TIM2->DIER;
 	if (val & TIM_SR_CC1IF) {
 		TIM2->SR = ~TIM_SR_CC1IF;
-		ledRedSwitch();
+		keyTimerHandler();
 	}
 	if (val & TIM_SR_UIF) {
 		TIM2->SR = ~TIM_SR_UIF;

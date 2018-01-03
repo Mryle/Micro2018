@@ -37,8 +37,6 @@ void keyResetInterrupts() {
  * Rozpoczęcie (z wyzerowaniem) używanego licznika.
  **/
 void keyStartTimer() {
-	timForceReset(TIM2);
-	timEnable(TIM2);
 }
 
 /*
@@ -82,14 +80,14 @@ void keyPrepare() {
 }
 
 void keyRowHandler(uint32_t row) {
-	/*
 	lastRow = row;
 	NVIC_DisableIRQ(EXTI9_5_IRQn);	// Wyłącz przerwania EXTI dla wierszy
 	keyResetInterrupts();		// Wyzeruj znaczniki przerwań dla wierszy
-	keyColHighState();
-	keyStartTimer();	// Wyzerowanie rejestru licznika i uruchomienie go
-	(*/
-	ledRedSwitch();
+	keyColHighState();			// Wysoki stan na liniach kolumn
+	// Wyzerowanie rejestru licznika i uruchomienie go
+	timForceReset(TIM2);
+	timEnable(TIM2);
+
 }
 
 bool keyScanKeyboard() {
@@ -110,18 +108,15 @@ bool keyScanKeyboard() {
 
 // Trwa na tyle długo, że usuwa całość
 void keyTimerHandler() {
-	//timDisable(TIM_2);	// Wyłącza licznik
+	timDisable(TIM2);	// Wyłącza licznik
 	// Skanuj stan klawiatury
 	//keyPressed(lastRow, 0);	//Wywołaj zdarzenie klikniecia przycisku
-	//keyScanKeyboard();
-	/*
+	
+	keyScanKeyboard();
+	
 	if (true) {		// !keyScanKeyboard()
 		keyColLowState();		// Ustawienie niskiego stanu
-		//timDisable(TIM_2);
-		keyResetInterrupts();				
-		keyEnableHandlers();	// Ponownie włącz zdarzenia w układzie EXTI
+		keyResetInterrupts();
+		NVIC_EnableIRQ(EXTI9_5_IRQn);
 	}
-	ledRedOn();
-	*/
-	ledRedOff();
 }
