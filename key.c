@@ -70,8 +70,7 @@ void keyColHighState() {
 void keyPrepare() {
 	timPrepareUp(TIM2, 16000, 100);		//Licznik co 1 ms
 	timInterruptDefaultEnable(TIM2);	//Włączenie przerwań licznika
-
-	TIM2->CCR1 = 9;
+	TIM2->CCR1 = 99;
 	// Stan niski na wyprowadzeniach kolumn
 	keyColLowState();
 	// Ustawianie wyprowadzeń wejścia i wyjścia
@@ -83,12 +82,14 @@ void keyPrepare() {
 }
 
 void keyRowHandler(uint32_t row) {
+	/*
 	lastRow = row;
 	NVIC_DisableIRQ(EXTI9_5_IRQn);	// Wyłącz przerwania EXTI dla wierszy
 	keyResetInterrupts();		// Wyzeruj znaczniki przerwań dla wierszy
 	keyColHighState();
 	keyStartTimer();	// Wyzerowanie rejestru licznika i uruchomienie go
-	ledRedOn();
+	(*/
+	ledRedSwitch();
 }
 
 bool keyScanKeyboard() {

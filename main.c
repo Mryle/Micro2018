@@ -67,13 +67,10 @@ void onSecondTim() {
 }
 
 void prepareSecondTim() {
-	timPrepareUp(TIM2, 16000, 1000);		//Licznik co 1 ms
-	timInterruptDefaultEnable(TIM2);	//Włączenie przerwań licznika
-	TIM2->CCR1 = 999;
 	timPrepareUp(TIM3, 16000, 1000);		//Licznik co 1 ms
 	timInterruptDefaultEnable(TIM3);	//Włączenie przerwań licznika
 	TIM3->CCR1 = 999;
-	//NVIC ... Enable
+	NVIC_EnableIRQ(TIM3_IRQn);
 }
 
 int main() {
@@ -87,9 +84,9 @@ int main() {
 	__NOP();
 	// Przygotowanie poszczególnych modułów.
 	ledPrepare();	//	Konfiguracja Out dla ledów i wyłączenie ich
-	//keyPrepare(); //Just Testing led interrupts
+	keyPrepare(); //Just Testing led interrupts
 	
-	prepareSecondTim();
+	//prepareSecondTim();
 
 	IRQsetPriority(TIM2_IRQn, 		HIGH_IRQ_PRIO,	HIGH_IRQ_SUBPRIO);
 	IRQsetPriority(TIM3_IRQn, 		HIGH_IRQ_PRIO,	MIDDLE_IRQ_SUBPRIO);
@@ -101,10 +98,6 @@ int main() {
 
 	LCDconfigure();
 	LCDclear();
-
-	NVIC_EnableIRQ(TIM2_IRQn);
-	NVIC_EnableIRQ(TIM3_IRQn);
-
 
 	// Kontrolna lampka
 	ledBlueOn();
