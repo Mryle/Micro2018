@@ -34,6 +34,7 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 		col = _col;
 		click = 1;
 	}
+	/*
 	if (!write) {
 		queuePut(&next, '.');
 		queuePut(&next, tabmask[row][col][0]);
@@ -41,16 +42,18 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 	} else {
 		ledRedSwitch();
 	}
-	//timDisable(TIM_3);
-	//timForceReset(TIM_3);
-	//timEnable(TIM_3);
+	*/
+	ledGreenSwitch();
+	timDisable(TIM3);
+	timForceReset(TIM3);
+	timEnable(TIM3);
 }
 
 void onSecondTim() {
-	/*timDisable(TIM3);	// Wyłączamy ten licznik
+	timDisable(TIM3);	// Wyłączamy ten licznik
 	click = click % 4;
 	if (row != 5) {
-		char znk = 'A';//tabmask[click][row][col];
+		char znk = tabmask[click][row][col];
 		if (znk == '\0') {
 			clear = true;
 		} else if (!write) {
@@ -61,10 +64,10 @@ void onSecondTim() {
 		queuePut(&next, '!');
 		write = true;
 	}
+	ledRedSwitch();
 	row = 5;
 	col = 5;
 	//LCDputcharWrap('0' + row);
-	*/
 }
 
 void prepareSecondTim() {
