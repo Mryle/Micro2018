@@ -41,7 +41,10 @@ bool addChar(char t) {
 
 bool delChar() {
 	if (pos > 0) {
-		text[pos] = ' ';
+		for(int a = pos; a + 1 < textSize; a++) {
+			text[a] = text[a+1];
+		}
+		text[textSize - 1] = ' ';
 		pos--;
 		return true;
 	}
@@ -108,15 +111,6 @@ static void acceptKey() {
 void keyPressed(uint32_t _row, uint32_t _col) {
 	timDisable(TIM3);
 	// Sprawdzanie funkcji
-	char znk = tabmask[0][_row][_col];
-	if (znk <= 8) {
-		if (!write) {
-			acComm = znk;
-			write = true;
-		}
-		_resetKey();
-		return;
-	}
 	if (row == _row && col == _col) {
 		click++;
 	} else {
@@ -126,6 +120,21 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 		row = _row;
 		col = _col;
 		click = 0;
+	}
+	char znk = tabmask[click][row][col];
+	if (znk <= 8) {
+		if (!write) {
+			acComm = znk;
+			write = true;
+		} else { // Aktualnie już edytujemy jakiś znak
+			if (znk == 0) { // Chcemy wyczyścić ekran, zróbmy to
+				acComm = 0;
+			} else if (znk == 8) { //Chcemy usunąć znak, więc nie wypisujmy nastepnego
+				write = false;
+			}
+		}
+		_resetKey();
+		return;
 	}
 	timForceReset(TIM3);
 	timEnable(TIM3);
