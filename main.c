@@ -36,7 +36,7 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 	}
 	if (!write) {
 		queuePut(&next, '.');
-		queuePut(&next, tabmask[row][col][0]);
+		queuePut(&next, tabmask[col][row][0]);
 		write = true;
 	} else {
 		ledRedSwitch();
@@ -136,12 +136,12 @@ void EXTI9_5_IRQHandler() // Handler
 		EXTI->PR = EXTI_PR_PR7;
 		keyRowHandler(1);
 	}
-	if (val & EXTI_PR_PR7) {
-		EXTI->PR = EXTI_PR_PR7;
+	if (val & EXTI_PR_PR8) {
+		EXTI->PR = EXTI_PR_PR8;
 		keyRowHandler(2);
 	}
-	if (val & EXTI_PR_PR7) {
-		EXTI->PR = EXTI_PR_PR7;
+	if (val & EXTI_PR_PR9) {
+		EXTI->PR = EXTI_PR_PR9;
 		keyRowHandler(3);
 	}
 }

@@ -77,6 +77,7 @@ void keyPrepare() {
 	keyResetInterrupts();
 	// Włączenie przerwań
 	NVIC_EnableIRQ(EXTI9_5_IRQn);
+	NVIC_EnableIRQ(TIM2_IRQn);
 }
 
 void keyRowHandler(uint32_t row) {
