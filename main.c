@@ -1,84 +1,167 @@
 #include "main.h"
 
 char tabmask[4][4][4] = {
-{	{'1',	'A',	'D',	' '},
-	{'G',	'J',	'M',	'.'},
-	{'P',	'T',	'W',	'!'},
-	{'*',	'0',	'#',	'?'}},
+{	{'1',	'A',	'D',	 8 },
+	{'G',	'J',	'M',	 1 },
+	{'P',	'T',	'W',	 2 },
+	{'*',	'0',	'#',	 0 }},
 
-{	{'1',	'B',	'E',	' '},
-	{'H',	'K',	'N',	'.'},
-	{'R',	'U',	'X',	'!'},
-	{'*',	'\0',	'#',	'?'}},
+{	{'1',	'B',	'E',	 8 },
+	{'H',	'K',	'N',	 1 },
+	{'R',	'U',	'X',	 2 },
+	{'*',	' ',	'.',	 0 }},
 
-{	{'1',	'C',	'F',	' '},
-	{'I',	'L',	'O',	'.'},
-	{'S',	'V',	'Y',	'!'},
-	{'*',	'\0',	'#',	'?'}},
+{	{'1',	'C',	'F',	 8 },
+	{'I',	'L',	'O',	 1 },
+	{'S',	'V',	'Y',	 2 },
+	{'*',	'0',	'?',	 0 }},
 
-{	{'1',	'2',	'3',	' '},
-	{'4',	'5',	'6',	'.'},
-	{'7',	'8',	'9',	'!'},
-	{'*',	'\0',	'#',	'?'}}
+{	{'1',	'2',	'3',	 8 },
+	{'4',	'5',	'6',	 1 },
+	{'7',	'8',	'9',	 2 },
+	{'*',	' ',	'!',	 0 }}
 };
 
+/**
+ * Obsługa wypisywania klawiszy
+ **/
 
+#define textSize 128
+char text[textSize];
+int16_t pos = 0;
+
+bool addChar(char t) {
+	if (pos < textSize - 1) {
+		text[pos] = t;
+		pos++;
+		return true;
+	}
+	return false;
+}
+
+bool delChar() {
+	if (pos > 0) {
+		text[pos] = ' ';
+		pos--;
+		return true;
+	}
+	return false;
+}
+
+void _redrawScreen() {
+	LCDclear();
+	int16_t _pos = pos - 20;
+	if (_pos < 0) _pos = 0;
+	for(; _pos < textSize; _pos++) {
+		if (_pos == pos)
+			LCDputcharWrap('_');
+		else
+			LCDputcharWrap(text[_pos]);
+	}
+}
+
+void _backspace() {
+	if (delChar()) {
+		_redrawScreen();
+	}
+}
+
+void _clear() {
+	for(int a = 0; a < textSize; a++) {
+		text[a] = ' ';
+	}
+	pos = 0;
+	LCDclear();
+	LCDputcharWrap('_');
+}
+
+/**
+ * Obsługa przerwań z klawiatury
+ **/
+
+// Kolejka obsługi znaków
+volatile bool write = false;
+char acComm = 0;
 char next_tab[25];
 Queue next;
-volatile bool clear = false;
-volatile bool write = false;
+
 volatile uint32_t row = 5, col = 5, click = 0;
+
+static void _resetKey() {
+	row = 5;
+	col = 5;
+	click = -1;
+}
+
+static void acceptKey() {
+	click = click % 4;
+	if (row != 5) {
+		char znk = tabmask[click][row][col];
+		if (!write) {
+			acComm = znk;
+			write = true;
+		}
+	}
+	_resetKey();
+}
 
 void keyPressed(uint32_t _row, uint32_t _col) {
 	timDisable(TIM3);
+	// Sprawdzanie funkcji
+	char znk = tabmask[0][_row][_col];
+	if (znk <= 8) {
+		if (!write) {
+			acComm = znk;
+			write = true;
+		}
+		_resetKey();
+		return;
+	}
 	if (row == _row && col == _col) {
 		click++;
 	} else {
+		if (click != -1) {
+			acceptKey();
+		}
 		row = _row;
 		col = _col;
 		click = 0;
 	}
-	/*
-	if (!write) {
-		//queuePut(&next, '.');
-		queuePut(&next, tabmask[0][row][col]);
-		write = true;
-	} else {
-		ledRedSwitch();
-	}
-	*/
-	ledGreenSwitch();
 	timForceReset(TIM3);
 	timEnable(TIM3);
 }
 
 void keyLongTimer() {
 	timDisable(TIM3);	// Wyłączamy ten licznik
-	click = click % 4;
-	if (row != 5) {
-		char znk = tabmask[click][row][col];
-		if (znk == '\0') {
-			clear = true;
-		} else if (!write) {
-			queuePut(&next, znk);
-			write = true;
-		}
-	} else if (!write) {
-		queuePut(&next, '!');
-		write = true;
-	}
-	ledRedSwitch();
-	row = 5;
-	col = 5;
-	click = 0;
-	//LCDputcharWrap('0' + row);
+	acceptKey();
 }
 
 void prepareSecondTim() {
-	timPrepareUp(TIM3, 16000, 1000);		//Licznik co 1 ms
+	timPrepareUp(TIM3, 16000, 500);		//Licznik co 1 ms
 	timInterruptDefaultEnable(TIM3);	//Włączenie przerwań licznika
-	TIM3->CCR1 = 999;
+	TIM3->CCR1 = 499;
 	NVIC_EnableIRQ(TIM3_IRQn);
+}
+
+void drawLoop() {
+	if (write) {
+		char znk = acComm;
+		if (znk == 0) {
+			_clear();
+		} else if (znk == 1) {
+			if (pos > 0) pos--;
+			_redrawScreen();
+		} else if (znk == 2) {
+			if (pos < textSize - 1) pos++;
+			_redrawScreen();
+		} else if (znk == 8) {
+			_backspace();
+		} else if (znk > 8) {
+			if (addChar(znk))
+				_redrawScreen();
+		}
+		write = false;
+	}
 }
 
 int main() {
@@ -100,40 +183,21 @@ int main() {
 	IRQsetPriority(TIM3_IRQn, 		HIGH_IRQ_PRIO,	MIDDLE_IRQ_SUBPRIO);
 	IRQsetPriority(EXTI9_5_IRQn,	HIGH_IRQ_PRIO,	VERY_HIGH_IRQ_SUBPRIO);
 	queueInit(&next, next_tab, 25);
-	queuePutStr(&next, "Hello:");
 	
 	write = true;
 
 	LCDconfigure();
-	LCDclear();
+	_clear();
 
 	// Kontrolna lampka
 	ledBlueOn();
 	for (;;) {
-		if (clear) {
-			LCDclear();
-			clear = false;
-		}
-		if (write) {
-			char znk = queuePeek(&next);
-			queuePop(&next);
-			LCDputcharWrap(znk);
-			if (queueEmpty(&next)) {
-				write = false;
-			}
-		}
-		Delay(360000);
-		if (ledBlueGet())
-			ledBlueOff();
-		else
-			ledBlueOn();
-		;
+		drawLoop();
 	}
 }
 
 void EXTI9_5_IRQHandler() // Handler
 {
-	//intHandle(INT_EXTI9_5, &(EXTI->PR), &(EXTI->PR));
 	uint32_t val = EXTI->PR;
 	if (val & EXTI_PR_PR6) {
 		EXTI->PR = EXTI_PR_PR6;

@@ -66,9 +66,9 @@ void keyColHighState() {
 
 
 void keyPrepare() {
-	timPrepareUp(TIM2, 16000, 100);		//Licznik co 1 ms
+	timPrepareUp(TIM2, 1600, 10);		//Licznik co 1/10 ms
 	timInterruptDefaultEnable(TIM2);	//Włączenie przerwań licznika
-	TIM2->CCR1 = 99;
+	TIM2->CCR1 = 9;
 	// Stan niski na wyprowadzeniach kolumn
 	keyColLowState();
 	// Ustawianie wyprowadzeń wejścia i wyjścia
