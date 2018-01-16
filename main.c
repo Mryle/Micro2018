@@ -102,9 +102,7 @@ void WriteDeleteChar() {
 			text[a] = text[a+1];
 		}
 		text[textSize - 1] = ' ';
-		if (pos == textLength) {
-			textLength--;
-		}
+		textLength--;
 		pos--;
 		if (CheckRedrawLineCorrect()) {
 			if (pos < textLength) {
