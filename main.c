@@ -22,71 +22,100 @@ char tabmask[4][4][4] = {
 	{'*',	' ',	'!',	 0 }}
 };
 
+volatile bool write = false;
+volatile bool preview = false;
+volatile char previewChar = 0;
+char acComm = 0;
+char prev = 0;
+
 /**
  * Obsługa wypisywania klawiszy
  **/
 
 #define textSize 128
 char text[textSize];
+int16_t line = 0;	// Aktualne przesunięcie ekrnau w liniach
 int16_t pos = 0;
 
-bool addChar(char t) {
-	if (pos < textSize - 1) {
-		text[pos] = t;
-		pos++;
+void MoveToPosition() {
+	int linemov = pos / LCDgetmaxcol() - line;
+	LCDgoto(linemov, pos % LCDgetmaxcol());
+}
+
+void WritePreview() {
+	MoveToPosition();
+	if (preview) {
+		LCDputcharspecwrap(previewChar);
+		preview = false;
+	} else {
+		LCDputcharspecwrap(' ');
+	}
+}
+
+void WriteChar(char c) {
+	MoveToPosition();
+	LCDputcharWrap(c);
+}
+
+void WriteRedrawScreen() {
+	LCDclear();
+	int16_t _pos = line * LCDgetmaxcol();
+	for(; _pos < textSize; _pos++) {
+			LCDputcharWrap(text[_pos]);
+	}
+}
+
+/**
+ * Sprawdza czy trzeba przerysować ekran i jak tak to przerysowuje
+ **/
+bool CheckRedrawLineCorrect() {
+	int linemov = pos/LCDgetmaxcol() - line;
+	if (linemov < 0) {
+		line += 3;
+	} else if (linemov > LCDgetmaxline()) {
+		line -= 3;
+	} else {
 		return true;
 	}
+	WriteRedrawScreen();
 	return false;
 }
 
-bool delChar() {
+
+void WriteNewChar(char t) {
+	if (pos < textSize - 1) {
+		text[pos] = t;
+		if (CheckRedrawLineCorrect()) {
+			WriteChar(text[pos]);
+		}
+		pos++;
+	}
+}
+
+void WriteDeleteChar() {
 	if (pos > 0) {
 		for(int a = pos; a + 1 < textSize; a++) {
 			text[a] = text[a+1];
 		}
 		text[textSize - 1] = ' ';
 		pos--;
-		return true;
-	}
-	return false;
-}
-
-void _redrawScreen() {
-	LCDclear();
-	int16_t _pos = pos - 20;
-	if (_pos < 0) _pos = 0;
-	for(; _pos < textSize; _pos++) {
-		if (_pos == pos)
-			LCDputcharWrap('_');
-		else
-			LCDputcharWrap(text[_pos]);
+		if (CheckRedrawLineCorrect()) {
+			WriteRedrawScreen();
+		}
 	}
 }
 
-void _backspace() {
-	if (delChar()) {
-		_redrawScreen();
-	}
-}
-
-void _clear() {
+void WriteClear() {
 	for(int a = 0; a < textSize; a++) {
 		text[a] = ' ';
 	}
 	pos = 0;
 	LCDclear();
-	LCDputcharWrap('_');
 }
 
 /**
  * Obsługa przerwań z klawiatury
  **/
-
-// Kolejka obsługi znaków
-volatile bool write = false;
-char acComm = 0;
-char next_tab[25];
-Queue next;
 
 volatile uint32_t row = 5, col = 5, click = 0;
 
@@ -134,10 +163,14 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 			}
 		}
 		_resetKey();
-		return;
+	} else {
+		// Preview
+		previewChar = znk;
+		preview = true;
+
+		timForceReset(TIM3);
+		timEnable(TIM3);
 	}
-	timForceReset(TIM3);
-	timEnable(TIM3);
 }
 
 void keyLongTimer() {
@@ -156,20 +189,25 @@ void drawLoop() {
 	if (write) {
 		char znk = acComm;
 		if (znk == 0) {
-			_clear();
+			WriteClear();
 		} else if (znk == 1) {
-			if (pos > 0) pos--;
-			_redrawScreen();
+			WriteChar(text[pos]);	// Clearing Preview
+			if (pos > 0) {
+				pos--;
+			}
 		} else if (znk == 2) {
+			WriteChar(text[pos]); // Clearing Preview
 			if (pos < textSize - 1) pos++;
-			_redrawScreen();
 		} else if (znk == 8) {
-			_backspace();
+			WriteDeleteChar();
 		} else if (znk > 8) {
-			if (addChar(znk))
-				_redrawScreen();
+			WriteNewChar(znk);
 		}
+		WritePreview();
 		write = false;
+	}
+	if (preview) {
+		WritePreview();
 	}
 }
 
@@ -191,12 +229,11 @@ int main() {
 	IRQsetPriority(TIM2_IRQn, 		HIGH_IRQ_PRIO,	HIGH_IRQ_SUBPRIO);
 	IRQsetPriority(TIM3_IRQn, 		HIGH_IRQ_PRIO,	MIDDLE_IRQ_SUBPRIO);
 	IRQsetPriority(EXTI9_5_IRQn,	HIGH_IRQ_PRIO,	VERY_HIGH_IRQ_SUBPRIO);
-	queueInit(&next, next_tab, 25);
 	
 	write = true;
 
 	LCDconfigure();
-	_clear();
+	WriteClear();
 
 	// Kontrolna lampka
 	ledBlueOn();

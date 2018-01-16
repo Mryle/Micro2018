@@ -258,7 +258,7 @@ static void LCDsetColors(uint16_t text, uint16_t back) {
   BackColor = back;
 }
 
-static void LCDdrawChar(unsigned c) {
+static void LCDdrawCharColor(unsigned c, uint16_t foreColor, uint16_t backColor) {
   uint16_t const *p;
   uint16_t x, y, w;
   int      i, j;
@@ -270,10 +270,14 @@ static void LCDdrawChar(unsigned c) {
   p = &CurrentFont->table[(c - FIRST_CHAR) * CurrentFont->height];
   for (i = 0; i < CurrentFont->height; ++i) {
     for (j = 0, w = p[i]; j < CurrentFont->width; ++j, w >>= 1) {
-      LCDwriteData16(w & 1 ? TextColor : BackColor);
+      LCDwriteData16(w & 1 ? foreColor : backColor);
     }
   }
   CS(1);
+}
+
+static void LCDdrawChar(unsigned c) {
+	LCDdrawCharColor(c, TextColor, BackColor);
 }
 
 /** Public interface implementation **/
@@ -327,6 +331,23 @@ void LCDputchar(char c) {
   }
 }
 
+void LCDputcharspec(char c) {
+	if (c == '\n') 
+    LCDgoto(Line + 1, 0); /* line feed */
+  else if (c == '\r')
+    LCDgoto(Line, 0); /* carriage return */
+  else if (c == '\t')
+    LCDgoto(Line, (Position + 8) & ~7); /* tabulator */
+  else {
+    if (c >= FIRST_CHAR && c <= LAST_CHAR &&
+        Line >= 0 && Line < TextHeight &&
+        Position >= 0 && Position < TextWidth) {
+			LCDdrawCharColor(c, BackColor, TextColor);
+    }
+    LCDgoto(Line, Position + 1);
+  }
+}
+
 void LCDputcharWrap(char c) {
   /* Check if, there is room for the next character,
   but does not wrap on white character. */
@@ -335,6 +356,17 @@ void LCDputcharWrap(char c) {
     LCDputchar('\n');
   }
   LCDputchar(c);
+}
+
+void LCDputcharspecwrap(char c) {
+  /* Check if, there is room for the next character,
+  but does not wrap on white character. */
+  if (Position >= TextWidth &&
+      c != '\t' && c != '\r' &&  c != '\n' && c != ' ') {
+    LCDputcharspec('\n');
+  }
+  LCDputcharspec(c);
+
 }
 
 int LCDgetmaxline() {

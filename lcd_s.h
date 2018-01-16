@@ -7,6 +7,10 @@ void LCDgoto(int textLine, int charPos);
 void LCDputchar(char c);
 void LCDputcharWrap(char c);
 
+void LCDputcharspec(char c);
+void LCDputcharspecwrap(char c);
+
+
 int LCDgetmaxline();
 int LCDgetmaxcol();
 int LCDgetline();
