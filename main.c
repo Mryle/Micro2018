@@ -34,6 +34,7 @@ char prev = 0;
 
 #define textSize 128
 char text[textSize];
+int16_t textLength = 0;
 int16_t line = 0;	// Aktualne przesunięcie ekrnau w liniach
 int16_t pos = 0;
 
@@ -89,6 +90,9 @@ void WriteNewChar(char t) {
 			WriteChar(text[pos]);
 		}
 		pos++;
+		if (textLength < pos) {
+			textLength++;
+		}
 	}
 }
 
@@ -98,9 +102,18 @@ void WriteDeleteChar() {
 			text[a] = text[a+1];
 		}
 		text[textSize - 1] = ' ';
+		if (pos == textLength) {
+			textLength--;
+		}
 		pos--;
 		if (CheckRedrawLineCorrect()) {
-			WriteRedrawScreen();
+			if (pos < textLength) {
+				WriteRedrawScreen();
+			} else {
+				pos++;
+				WriteChar(' '); //Usunięcie poprzedniego priview
+				pos--;
+			}
 		}
 	}
 }
@@ -109,6 +122,7 @@ void WriteClear() {
 	for(int a = 0; a < textSize; a++) {
 		text[a] = ' ';
 	}
+	textLength = 0;
 	pos = 0;
 	LCDclear();
 }
@@ -132,6 +146,8 @@ static void acceptKey() {
 		if (!write) {
 			acComm = znk;
 			write = true;
+			previewChar = ' ';
+			preview = true;
 		}
 	}
 	_resetKey();
@@ -198,7 +214,7 @@ void drawLoop() {
 			}
 		} else if (znk == 2) {
 			WriteChar(text[pos]); // Clearing Preview
-			if (pos < textSize - 1) pos++;
+			if (pos < textLength) pos++;
 		} else if (znk == 8) {
 			WriteDeleteChar();
 		} else if (znk > 8) {
