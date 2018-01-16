@@ -142,6 +142,7 @@ void keyPressed(uint32_t _row, uint32_t _col) {
 	// Sprawdzanie funkcji
 	if (row == _row && col == _col) {
 		click++;
+		click %= 4;
 	} else {
 		if (click != -1) {
 			acceptKey();
