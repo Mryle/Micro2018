@@ -9,4 +9,4 @@
 #include "key.h"	// Obsługa klawiatury
 #include "queue.h"	// Obsługa kolejek
 
-#include <lcd.h>
+#include "lcd_s.h"
